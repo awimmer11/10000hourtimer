@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Journey to 10,000 Hours</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Styles -->
+    <style>
+        /* Custom Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Custom Scrollbar for Firefox */
+        scrollbar-width: thin;
+        scrollbar-color: #888 #f1f1f1;
+
+        /* Contribution Grid Styles */
+        .contribution-grid-container {
+            display: flex;
+            align-items: flex-start;
+            max-width: 800px;    /* Set a maximum width */
+            margin: 0 auto;      /* Center the container */
+            padding: 20px;       /* Add padding around the grid */
+        }
+
+        .day-labels {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-right: 5px;
+        }
+
+        .day-label {
+            height: 13px;
+            font-size: 9px;
+            color: #586069;
+            text-align: right;
+            line-height: 13px;
+            margin-bottom: 2px;
+        }
+
+        .contribution-grid {
+            display: grid;
+            grid-template-rows: repeat(7, 13px);
+            grid-auto-flow: column;
+            row-gap: 4px;
+            column-gap: 4px;
+            background-color: rgb(64, 107, 151);
+            border-radius: 10px;
+            padding: 8px;
+        }
+
+        .contribution-grid .day {
+            width: 12px;
+            height: 12px;
+            background-color: #ebedf0; /* GitHub's default gray */
+            border-radius: 2px;
+            box-sizing: border-box;
+        }
+
+        /* Level colors */
+        .level-0 {
+            background-color: #ebedf0 !important;
+        }
+        .level-1 {
+            background-color: #c6e48b !important;
+        }
+        .level-2 {
+            background-color: #7bc96f !important;
+        }
+        .level-3 {
+            background-color: #239a3b !important;
+        }
+        .level-4 {
+            background-color: #196127 !important;
+        }
+
+        /* Tooltip Styles */
+        .day[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            background-color: #000;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            transform: translate(-50%, -150%);
+            z-index: 10;
+            pointer-events: none;
+        }
+        .day[data-tooltip]:hover {
+            position: relative;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-center items-center bg-cover bg-center text-gray-800" style="background-image: url('hourglassbackground.webp');">
+    <!-- Main Container -->
+    <div class="flex flex-col md:flex-row">
+        <!-- Left Side: Main Content -->
+        <div class="flex flex-col items-center md:w-2/3">
+            <!-- Content Wrapper for Height Matching -->
+            <div id="leftContent" class="flex flex-col items-center">
+                <!-- Logo -->
+<!--                 <div class="w-80 h-80 mt-6 mb-6">
+                    <img src="Hourglasslogo.webp" alt="Journey to 10,000 Hours Logo" class="w-full h-full object-contain">
+                </div> -->
+
+                <h1 class="text-4xl text-center font-bold mb-8">Journey to 10,000 Hours</h1>
+                <div id="timer" class="text-6xl font-mono mb-8">00:00:00</div>
+
+                <div class="flex space-x-4">
+                    <button id="startBtn" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Start</button>
+                    <button id="stopBtn" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600" disabled>Stop</button>
+                </div>
+
+                <div id="status" class="mt-6 text-2xl"></div>
+
+                <!-- Progress Tracker -->
+                <div id="progressContainer" class="w-full max-w-md px-4 mt-6 mb-6">
+                    <div class="bg-gray-300 w-full h-6 rounded-full">
+                        <div id="progressBar" class="bg-blue-500 h-6 rounded-full" style="width: 0%;"></div>
+                    </div>
+                    <div class="text-center mt-2">
+                        Hello, <span id="userNameDisplay"></span>!<br>
+                        Progress: <span id="progressText">0</span>% (Total Time: <span id="totalTimeDisplay">00:00:00</span> / 10,000 hours)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Session History -->
+        <div class="md:w-2/3 md:pl-8 md:pr-8 mt-6 md:mt-6">
+            <h2 class="text-2xl font-semibold mb-4 text-center md:text-left">Session History</h2>
+            <ul id="historyList" class="space-y-2 overflow-y-auto pr-2">
+                <!-- History items will be inserted here -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Contribution Grid -->
+    <div class="mt-12 px-4"> <!-- Add flex and flex-row -->
+        <h2 class="text-2xl font-semibold mb-4 text-center">Your Practice over the Last Year</h2>
+        <div class="contribution-grid-container flex justify-center">
+            <!-- Day Labels -->
+            <div class="day-labels">
+                <div class="day-label">Mon</div>
+                <div class="day-label">Tue</div>
+                <div class="day-label">Wed</div>
+                <div class="day-label">Thu</div>
+                <div class="day-label">Fri</div>
+                <div class="day-label">Sat</div>
+                <div class="day-label">Sun</div>
+            </div>
+            <!-- Contribution Grid -->
+            <div id="contributionGrid" class="contribution-grid">
+                <!-- Contribution squares will be inserted here -->
+            </div>
+        </div>
+        <!-- Legend -->
+        <div class="flex justify-center mt-4 space-x-2 text-sm text-gray-600">
+            <span>Less</span>
+            <div class="w-4 h-4 level-0 border border-gray-300"></div>
+            <div class="w-4 h-4 level-1"></div>
+            <div class="w-4 h-4 level-2"></div>
+            <div class="w-4 h-4 level-3"></div>
+            <div class="w-4 h-4 level-4"></div>
+            <span>More</span>
+        </div>
+    </div>
+
+
+    <script>
+        let timerInterval;
+        let timeElapsed = 0;
+        let isRunning = false;
+        let history = [];
+        let sessionStartTime = null;
+        let totalTime = 0;
+        let userName = '';
+        let dailyData = {}; // Object to hold total duration per day
+
+        const timerDisplay = document.getElementById('timer');
+        const statusDisplay = document.getElementById('status');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const historyList = document.getElementById('historyList');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const totalTimeDisplay = document.getElementById('totalTimeDisplay');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const leftContent = document.getElementById('leftContent');
+        const contributionGrid = document.getElementById('contributionGrid');
+
+        // Load user name from localStorage
+        userName = localStorage.getItem('userName');
+        if (!userName) {
+            userName = prompt('Please enter your name:');
+            if (!userName) {
+                userName = 'Guest';
+            }
+            localStorage.setItem('userName', userName);
+        }
+        userNameDisplay.textContent = userName;
+
+        // Load history from localStorage
+        const savedHistory = localStorage.getItem('history');
+        if (savedHistory) {
+            history = JSON.parse(savedHistory);
+            updateHistoryDisplay();
+        }
+
+        // Load total time from localStorage
+        const savedTotalTime = localStorage.getItem('totalTime');
+        if (savedTotalTime) {
+            totalTime = parseInt(savedTotalTime, 10);
+            updateProgress();
+        }
+
+        // Load daily data from localStorage
+        const savedDailyData = localStorage.getItem('dailyData');
+        if (savedDailyData) {
+            dailyData = JSON.parse(savedDailyData);
+        }
+
+        // Adjust history list max height to match left content height
+        function adjustHistoryListHeight() {
+            const leftContentHeight = leftContent.offsetHeight;
+            historyList.style.maxHeight = leftContentHeight + 'px';
+        }
+
+        window.addEventListener('resize', adjustHistoryListHeight);
+
+        function updateTimerDisplay() {
+            const totalSeconds = timeElapsed;
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            timerDisplay.textContent = `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
+        }
+
+        function padZero(number) {
+            return number.toString().padStart(2, '0');
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            startBtn.classList.add('bg-blue-300', 'cursor-not-allowed');
+            stopBtn.classList.remove('bg-gray-500');
+            stopBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+            statusDisplay.textContent = 'Focus Time!';
+            sessionStartTime = new Date(); // Record the start time
+            timerInterval = setInterval(() => {
+                timeElapsed++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (!isRunning) return;
+            clearInterval(timerInterval);
+            isRunning = false;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            startBtn.classList.remove('bg-blue-300', 'cursor-not-allowed');
+            stopBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+            stopBtn.classList.add('bg-gray-500');
+            statusDisplay.textContent = 'Timer Stopped';
+            const sessionStopTime = new Date(); // Record the stop time
+            recordSession(sessionStartTime, sessionStopTime); // Record the session
+            timeElapsed = 0;
+            updateTimerDisplay();
+            sessionStartTime = null;
+        }
+
+        function recordSession(startTime, stopTime) {
+            const durationInSeconds = Math.floor((stopTime - startTime) / 1000);
+            const duration = formatDuration(durationInSeconds);
+
+            const sessionDate = startTime.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+            const session = {
+                startTime: startTime.toLocaleString(),
+                stopTime: stopTime.toLocaleString(),
+                duration: duration,
+                durationInSeconds: durationInSeconds,
+                date: sessionDate
+            };
+
+            history.unshift(session);
+            updateHistoryDisplay();
+
+            // Update daily data
+            if (dailyData[sessionDate]) {
+                dailyData[sessionDate] += durationInSeconds;
+            } else {
+                dailyData[sessionDate] = durationInSeconds;
+            }
+            updateContributionGrid();
+
+            // Update total time
+            totalTime += durationInSeconds;
+            updateProgress();
+
+            // Save to localStorage
+            localStorage.setItem('history', JSON.stringify(history));
+            localStorage.setItem('totalTime', totalTime);
+            localStorage.setItem('dailyData', JSON.stringify(dailyData));
+        }
+
+        function updateHistoryDisplay() {
+            historyList.innerHTML = '';
+            history.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'bg-white bg-opacity-50 p-4 rounded-lg shadow';
+                li.innerHTML = `
+                    <div class="flex justify-between">
+                        <span class="font-bold">Start:</span>
+                        <span>${item.startTime}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-bold">Stop:</span>
+                        <span>${item.stopTime}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-bold">Duration:</span>
+                        <span>${item.duration}</span>
+                    </div>
+                `;
+                historyList.appendChild(li);
+            });
+            adjustHistoryListHeight(); // Adjust height after updating history
+        }
+
+        function updateProgress() {
+            const totalHours = totalTime / 3600; // totalTime is in seconds
+            const progressPercentage = Math.min((totalHours / 10000) * 100, 100);
+            progressBar.style.width = progressPercentage + '%';
+            progressText.textContent = progressPercentage.toFixed(2);
+
+            // Update the total time display
+            const formattedTotalTime = formatDuration(totalTime, true);
+            totalTimeDisplay.textContent = formattedTotalTime;
+        }
+
+        function updateContributionGrid() {
+            console.log("Updating contribution grid")
+
+            //Log the dailyData object to verify its content
+            console.log("dailyData:", dailyData);
+            const today = new Date();
+            // Start from the Sunday on or before 1 year ago
+            const oneYearAgo = new Date(today);
+            oneYearAgo.setDate(today.getDate() - 364);
+            const startDate = new Date(oneYearAgo);
+            startDate.setDate(oneYearAgo.getDate() - (oneYearAgo.getDay() || 7) + 1); // Adjust to Monday
+
+            // Calculate total days to display (should be 371 to cover 53 weeks)
+            const totalDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+            contributionGrid.innerHTML = ''; // Clear existing grid
+
+            for (let i = 0; i < totalDays; i++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + i);
+
+                if (currentDate > today) {
+                    break;
+                }
+
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('day');
+
+                const dateString = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
+                // Log the date being processed
+                console.log("Processing date:", dateString);
+
+                const totalSeconds = dailyData[dateString] || 0;
+                const totalHours = totalSeconds / 3600;
+
+                //Log the time spent for this day and the corresponding total hours
+                console.log(`Date: ${dateString}, Total Seconds: ${totalSeconds}, Total Hours: ${totalHours}`);
+
+
+                // Determine the contribution level
+                let level = 'level-0'; // Default color
+                if (totalSeconds > 0) {
+                    if (totalHours >= 2) {
+                        level = 'level-4';
+                    } else if (totalHours >= 1.5) {
+                        level = 'level-3';
+                    } else if (totalHours >= 1) {
+                        level = 'level-2';
+                    } else {
+                        level = 'level-1';
+                    }
+                }
+
+                // Log the assigned level to make sure it's being calculated correctly
+                console.log(`Assigned level for ${dateString}: ${level}`);
+
+                dayElement.classList.add(level);
+
+                // Tooltip for hover information
+                dayElement.setAttribute('data-tooltip', `${currentDate.toDateString()}\n${formatDuration(totalSeconds)}`);
+
+                contributionGrid.appendChild(dayElement);
+            }
+        }
+
+        function formatDuration(seconds, showSeconds = false) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            if (showSeconds) {
+                return `${padZero(hours)}:${padZero(minutes)}:${padZero(secs)}`;
+            } else {
+                return `${hours}h ${minutes}m`;
+            }
+        }
+
+        startBtn.addEventListener('click', startTimer);
+        stopBtn.addEventListener('click', stopTimer);
+
+        // Initialize the app
+        updateTimerDisplay();
+        updateProgress();
+        adjustHistoryListHeight(); // Initial adjustment
+        updateContributionGrid(); // Initial grid rendering
+    </script>
+</body>
+</html>
